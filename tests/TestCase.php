@@ -24,7 +24,7 @@ abstract class TestCase extends Orchestra
 
         $this->withFactories(realpath(__DIR__.'/Fixtures/factories'));
 
-        \Route::get('auth-required', function () {
+        \Route::get('user', function () {
             return auth()->user();
         })->middleware(SubstituteBindings::class)->middleware('auth');
     }

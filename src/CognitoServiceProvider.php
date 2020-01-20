@@ -31,8 +31,6 @@ class CognitoServiceProvider extends ServiceProvider
 
         $this->app['auth']->extend('cognito', function ($app, $name, array $config) {
             $guard = $app->make(CognitoGuard::class);
-            $guard->setDispatcher($this->app['events']);
-            $guard->setRequest($this->app->refresh('request', $guard, 'setRequest'));
             return $guard;
         });
     }

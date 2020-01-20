@@ -7,7 +7,7 @@ use GuzzleHttp\Client;
 use Illuminate\Support\Facades\Cache;
 use phpseclib\Crypt\RSA;
 use phpseclib\Math\BigInteger;
-use pmill\AwsCognito\Exception\TokenInvalidKidException;
+use BenBjurstrom\CognitoGuard\Exceptions\InvalidTokenException;
 
 /**
  * A class for downloading the Cognito JWKS for the configured user pool and
@@ -44,7 +44,7 @@ class JwksService
     {
         $this->updatePemCache();
         return Cache::get('cognito:pem:' . $kid, function () {
-            throw new TokenInvalidKidException('The given userpool does not have a jwk matching the kid provided. If you believe this message is in error try clearing your cache.');
+            throw new InvalidTokenException('The configured cognito user pool does not have a jwk with the kid belonging to the given token. If the problem persists try clearing the application cache.');
         });
     }
 

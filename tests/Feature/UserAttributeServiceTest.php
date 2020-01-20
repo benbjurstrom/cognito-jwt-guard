@@ -10,6 +10,7 @@ class UserAttributeServiceTest extends TestCase
     {
         $uas = new UserAttributeService();
         $result = $uas->getUserAttributesFromToken(env('AWS_COGNITO_TEST_TOKEN'), config('cognito.user_pool_region'));
+        dump($result);
         $this->assertArrayHasKey('sub', $result);
     }
 }

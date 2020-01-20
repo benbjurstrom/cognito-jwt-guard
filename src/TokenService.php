@@ -1,9 +1,12 @@
 <?php
 
 namespace BenBjurstrom\CognitoGuard;
+use BenBjurstrom\CognitoGuard\Exceptions\InvalidTokenException;
+use Firebase\JWT\BeforeValidException;
+use Firebase\JWT\ExpiredException;
 use Firebase\JWT\JWT;
 use Exception;
-use BenBjurstrom\CognitoGuard\Exceptions\TokenVerificationException;
+use Firebase\JWT\SignatureInvalidException;
 
 class TokenService
 {
@@ -35,7 +38,19 @@ class TokenService
         $jwksService = app()->make(JwksService::class);
         $pem = $jwksService->getPemFromKid($kid);
 
-        return JWT::decode($jwt, $pem, array('RS256'));
+        try{
+            $payload = JWT::decode($jwt, $pem, array('RS256'));
+        }catch(ExpiredException $e){
+            throw new InvalidTokenException($e->getMessage());
+        }
+        catch(SignatureInvalidException $e){
+            throw new InvalidTokenException($e->getMessage());
+        }
+        catch(BeforeValidException $e){
+            throw new InvalidTokenException($e->getMessage());
+        }
+
+        return $payload;
     }
 
     /**
@@ -50,8 +65,9 @@ class TokenService
         $region     = config('cognito.user_pool_region');
         $poolId     = config('cognito.user_pool_id');
         $issuer = sprintf('https://cognito-idp.%s.amazonaws.com/%s', $region, $poolId);
-        throw_unless($payload->iss === $issuer, new TokenVerificationException ('Invalid issuer. Expected:'. $issuer));
-        throw_unless(in_array($payload->token_use, ['id','access']), new TokenVerificationException ('Invalid token use'));
+
+        throw_unless($payload->iss === $issuer, new InvalidTokenException ('Invalid issuer. Expected:'. $issuer));
+        throw_unless(in_array($payload->token_use, ['id','access']), new InvalidTokenException ('Invalid token use'));
     }
 
     /**
@@ -63,9 +79,9 @@ class TokenService
     {
         $header = JWT::jsonDecode(JWT::urlsafeB64Decode(strtok($jwt, '.')));
 
-        throw_unless(isset($header->kid), new TokenVerificationException('No kid present in token header'));
-        throw_unless(isset($header->alg), new TokenVerificationException ('No alg present in token header'));
-        throw_unless($header->alg === 'RS256', new TokenVerificationException ('The token alg  is not RS256'));
+        throw_unless(isset($header->kid), new InvalidTokenException('No kid present in token header'));
+        throw_unless(isset($header->alg), new InvalidTokenException ('No alg present in token header'));
+        throw_unless($header->alg === 'RS256', new InvalidTokenException ('The token alg  is not RS256'));
 
         return $header->kid;
     }

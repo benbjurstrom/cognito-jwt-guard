@@ -1,10 +1,10 @@
 <?php
 namespace BenBjurstrom\CognitoGuard\Tests\Unit;
 
+use BenBjurstrom\CognitoGuard\Exceptions\InvalidTokenException;
 use BenBjurstrom\CognitoGuard\JwksService;
 use BenBjurstrom\CognitoGuard\Tests\TestCase;
 use BenBjurstrom\CognitoGuard\TokenService;
-use Firebase\JWT\SignatureInvalidException;
 use phpseclib\Crypt\RSA;
 
 
@@ -66,7 +66,7 @@ class TokenServiceTest extends TestCase
                 ->andReturn($wrongKeypair['publickey']);
         });
 
-        $this->expectException(SignatureInvalidException ::class);
+        $this->expectException(InvalidTokenException ::class);
         $ts = new TokenService();
         $ts->decode($jtb['jwt']);
     }
