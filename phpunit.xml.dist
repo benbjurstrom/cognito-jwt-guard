@@ -21,7 +21,7 @@
     </testsuites>
     <filter>
         <whitelist processUncoveredFilesFromWhitelist="true">
-            <directory suffix=".php">./app</directory>
+            <directory suffix=".php">./src</directory>
         </whitelist>
     </filter>
     <php>
@@ -39,4 +39,7 @@
         <server name="AWS_COGNITO_REGION" value="SOME_REGION"/>
         <server name="AWS_COGNITO_USER_POOL_ID" value="SOME_POOL_ID"/>
     </php>
+    <logging>
+        <log type="coverage-clover" target="build/logs/clover.xml"/>
+    </logging>
 </phpunit>
