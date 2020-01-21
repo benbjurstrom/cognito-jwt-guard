@@ -17,7 +17,7 @@ class CreateUsersTable extends Migration
             $table->bigIncrements('id');
             $table->string('name');
             $table->string('email')->unique();
-            $table->string('cognito_uuid')->unique();
+            $table->uuid('cognito_uuid')->unique();
             $table->timestamps();
         });
     }

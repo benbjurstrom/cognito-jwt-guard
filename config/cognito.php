@@ -21,9 +21,9 @@ return [
     |--------------------------------------------------------------------------
     | Single Sign-On Settings
     |--------------------------------------------------------------------------
-    | If use_sso is true the cognito guard will use the UserProvider to
-    | automatically create a new user record anytime the username attribute
-    | contained in a validated JWT does not already exist in the users table.
+    | If use_sso is true the cognito guard will automatically create a new user
+    | record anytime the username attribute contained in a validated JWT
+    | does not already exist in the users table.
     |
     | The new user will be created with the user attributes listed here
     | using the values stored in the given cognito user pool. Each attribute
