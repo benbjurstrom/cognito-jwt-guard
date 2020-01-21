@@ -11,7 +11,7 @@ Laravel authorization guard for JSON Web Tokens issued by Amazon AWS Cognito
  
  If a local Laravel user is found the guard will authenticate them for the duration of the request. If one is not found and Single Sign-On is enabled this package will create a new Laravel user.
  
- Note that this package does not provide methods for exchanging a username and password for a token. As such it is intended to be used with Laravel API-driven applications where the client would either obtain the token directly from AWS Cognito or through some centralized authentication server.
+ Note that this package does not provide methods for exchanging a username and password for a token. As such it is intended to be used with Laravel API-driven applications where the client would either obtain the token directly from AWS Cognito or through a dedicated authentication application.
  
 ## Installation
 
@@ -21,13 +21,13 @@ You can install the package using composer
 composer require benbjurstrom/cognito-jwt-guard
 ```
 
-Next publish the [migration]() and the [config/cognito.php](https://github.com/benbjurstrom/cognito-jwt-guard/blob/master/config/cognito.php) config file with:
+Next publish the [migration](https://github.com/benbjurstrom/cognito-jwt-guard/blob/master/database/migrations/add_cognito_uuid_to_users_table.php.stub) and the [config/cognito.php](https://github.com/benbjurstrom/cognito-jwt-guard/blob/master/config/cognito.php) config file with:
 
 ```shell script
  php artisan vendor:publish --provider="BenBjurstrom\CognitoGuard\CognitoServiceProvider"
 ```
 
-With the migration file published go ahead and run your migrations. This will add the required cognito_uuid property to your users table
+Next go ahead and run your migrations. This will add the required cognito_uuid property to your users table
 ```shell script
 php artisan migrate
 ```
