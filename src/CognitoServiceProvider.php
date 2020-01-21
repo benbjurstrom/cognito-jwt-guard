@@ -17,7 +17,7 @@ class CognitoServiceProvider extends ServiceProvider
         ], 'config');
 
         $this->publishes([
-            __DIR__.'/../database/migrations/alter_users_table.php.stub' => $this->getMigrationFileName($filesystem),
+            __DIR__.'/../database/migrations/add_cognito_uuid_to_users_table.php.stub' => $this->getMigrationFileName($filesystem),
         ], 'migrations');
 
         $this->app->singleton(JwksService::class, function (Application $app) {
@@ -58,8 +58,8 @@ class CognitoServiceProvider extends ServiceProvider
 
         return Collection::make($this->app->databasePath().DIRECTORY_SEPARATOR.'migrations'.DIRECTORY_SEPARATOR)
             ->flatMap(function ($path) use ($filesystem) {
-                return $filesystem->glob($path.'*_create_permission_tables.php');
-            })->push($this->app->databasePath()."/migrations/{$timestamp}_create_permission_tables.php")
+                return $filesystem->glob($path.'*_add_cognito_uuid_to_users_table.php');
+            })->push($this->app->databasePath()."/migrations/{$timestamp}_add_cognito_uuid_to_users_table.php")
             ->first();
     }
 }
