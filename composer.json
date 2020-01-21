@@ -57,7 +57,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "BenBjurstrom\\CognitoGuard\\CognitoGuardServiceProvider"
+                "BenBjurstrom\\CognitoGuard\\CognitoServiceProvider"
             ]
         }
     },
