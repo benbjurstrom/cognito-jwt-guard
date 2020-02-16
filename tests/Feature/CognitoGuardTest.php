@@ -35,7 +35,7 @@ class CognitoGuardTest extends TestCase
         $user->cognito_uuid = $this->cognito_uuid;
         $user->save();
 
-        config()->set('cognito.use_sso', false);
+        config()->set('cognito.sso', false);
         $this->withHeader('Authorization', 'Bearer ' . $this->token);
         $this->getJson('/user')->dump()
             ->assertSuccessful();
@@ -44,13 +44,44 @@ class CognitoGuardTest extends TestCase
     /**
      * @test
      */
-    public function testGuardCreatesSsoUser()
+    public function testGuardCreatesSsoUserFromCookie()
     {
         $this->assertDatabaseMissing('users', [
             'cognito_uuid' => $this->cognito_uuid
         ]);
 
-        config()->set('cognito.use_sso', true);
+        config()->set('cognito.sso', true);
+
+        $this->withHeaders([
+            'CONTENT_TYPE' => 'application/json',
+            'Accept' => 'application/json',
+        ]);
+
+        $prefix = 'CognitoIdentityServiceProvider_' . config('cognito.user_pool_client_id');
+        $lastAuthUserKey = $prefix . '_LastAuthUser';
+        $accessTokenKey = $prefix . '_' . $this->cognito_uuid . '_accessToken';
+
+        $this->withUnencryptedCookies([
+            $lastAuthUserKey => $this->cognito_uuid,
+            $accessTokenKey => $this->token
+        ])->get('/user')->dump()
+            ->assertSuccessful();
+
+        $this->assertDatabaseHas('users', [
+            'cognito_uuid' => $this->cognito_uuid
+        ]);
+    }
+
+    /**
+     * @test
+     */
+    public function testGuardCreatesSsoUserBearerToken()
+    {
+        $this->assertDatabaseMissing('users', [
+            'cognito_uuid' => $this->cognito_uuid
+        ]);
+
+        config()->set('cognito.sso', true);
         $this->withHeader('Authorization', 'Bearer ' . $this->token);
         $this->getJson('/user')->dump()
             ->assertSuccessful();

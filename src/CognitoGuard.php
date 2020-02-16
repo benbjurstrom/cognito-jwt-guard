@@ -45,11 +45,12 @@ class CognitoGuard implements Guard
             return $this->user;
         }
 
-        if(!$jwt = $this->request->bearerToken()){
+        $ts = app()->make(TokenService::class);
+
+        if(!$jwt = $ts->getTokenFromRequest($this->request)){
             return null;
         }
 
-        $ts = app()->make(TokenService::class);
         $cognitoUuid = $ts->getCognitoUuidFromToken($jwt);
 
         return $this->user = $this->provider->getCognitoUser($cognitoUuid, $jwt);

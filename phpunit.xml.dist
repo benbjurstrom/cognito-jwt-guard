@@ -38,6 +38,7 @@
         <!-- variables needed to run feature tests -->
         <server name="AWS_COGNITO_REGION" value="SOME_REGION"/>
         <server name="AWS_COGNITO_USER_POOL_ID" value="SOME_POOL_ID"/>
+        <server name="AWS_COGNITO_CLIENT_ID" value="SOME_CLIENT_ID"/>
     </php>
     <logging>
         <log type="coverage-clover" target="build/logs/clover.xml"/>

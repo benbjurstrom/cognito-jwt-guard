@@ -5,11 +5,82 @@ use BenBjurstrom\CognitoGuard\Exceptions\InvalidTokenException;
 use BenBjurstrom\CognitoGuard\JwksService;
 use BenBjurstrom\CognitoGuard\Tests\TestCase;
 use BenBjurstrom\CognitoGuard\TokenService;
+use Illuminate\Http\Request;
 use phpseclib\Crypt\RSA;
 
 
 class TokenServiceTest extends TestCase
 {
+
+
+    public function testGetTokenFromRequestCookie(){
+        $jwt     = 'jwt';
+        $sub     = 'sub';
+        $request = $this->mock(Request::class);
+
+        $prefix = 'CognitoIdentityServiceProvider_' . config('cognito.user_pool_client_id');
+        $lastAuthUserKey = $prefix . '_LastAuthUser';
+        $accessTokenKey = $prefix . '_' . $sub . '_accessToken';
+
+        $request->shouldReceive('cookie')
+            ->with($lastAuthUserKey)
+            ->andReturn($sub);
+
+        $request->shouldReceive('cookie')
+            ->with($accessTokenKey)
+            ->andReturn($jwt);
+
+        $ts = new TokenService();
+        $result = $ts->getTokenFromRequest($request);
+        $this->assertEquals($jwt, $result);
+    }
+
+    public function testGetTokenFromRequestBearer(){
+        $jwt     = 'jwt';
+        $request = $this->mock(Request::class);
+
+        $prefix = 'CognitoIdentityServiceProvider_' . config('cognito.user_pool_client_id');
+        $lastAuthUserKey = $prefix . '_LastAuthUser';
+        $accessTokenKey = $prefix . '__' . 'accessToken';
+
+        $request->shouldReceive('cookie')
+            ->with($lastAuthUserKey)
+            ->andReturn(null);
+
+        $request->shouldReceive('cookie')
+            ->with($accessTokenKey)
+            ->andReturn(null);
+
+        $request->shouldReceive('bearerToken')
+            ->andReturn($jwt);
+
+        $ts = new TokenService();
+        $result = $ts->getTokenFromRequest($request);
+        $this->assertEquals($jwt, $result);
+    }
+
+    public function testGetTokenFromRequestNull(){
+        $request = $this->mock(Request::class);
+
+        $prefix = 'CognitoIdentityServiceProvider_' . config('cognito.user_pool_client_id');
+        $lastAuthUserKey = $prefix . '_LastAuthUser';
+        $accessTokenKey = $prefix . '__' . 'accessToken';
+
+        $request->shouldReceive('cookie')
+            ->with($lastAuthUserKey)
+            ->andReturn(null);
+
+        $request->shouldReceive('cookie')
+            ->with($accessTokenKey)
+            ->andReturn(null);
+
+        $request->shouldReceive('bearerToken')
+            ->andReturn(null);
+
+        $ts = new TokenService();
+        $result = $ts->getTokenFromRequest($request);
+        $this->assertNull($result);
+    }
 
     /**
      * @test

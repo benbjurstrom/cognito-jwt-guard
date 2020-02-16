@@ -5,6 +5,7 @@ namespace BenBjurstrom\CognitoGuard;
 use BenBjurstrom\CognitoGuard\Exceptions\MissingRequiredAttributesException;
 use Illuminate\Auth\EloquentUserProvider;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
 
@@ -48,12 +49,12 @@ class ProviderRepository
     /**
      * @param string $cognitoUuid
      * @param string $jwt
-     * @return Authenticatable | null
+     * @return Model
      * @throws
      */
-    public function createSsoUser($cognitoUuid, $jwt)
+    public function createSsoUser($cognitoUuid, $jwt): Model
     {
-        if(!config('cognito.use_sso')){
+        if(!config('cognito.sso')){
             return null;
         };
 
@@ -66,8 +67,17 @@ class ProviderRepository
             $user->$requiredKey = $attributes[$requiredKey];
         }
 
-        $user->save();
+        if($repositoryClass = config('cognito.sso_repository_class')){
+            $repository = resolve($repositoryClass);
 
+            throw_unless(method_exists($repository, 'createCognitoUser'),
+                new \LogicException($repositoryClass . ' does not have a method named createCognitoUser')
+            );
+
+            return $repository->createCognitoUser($user);
+        }
+
+        $user->save();
         return $user;
     }
 

@@ -29,7 +29,7 @@ class ProviderRepositoryTest extends TestCase
      * @test
      */
     public function testGetCognitoUser(){
-        $this->app['config']->set('cognito.use_sso', true);
+        $this->app['config']->set('cognito.sso', true);
         $cognitoUuid = Uuid::uuid4()->toString();
         $jwt = 'jwt';
         $attributes = collect([
@@ -59,7 +59,7 @@ class ProviderRepositoryTest extends TestCase
      */
     public function testCreateSsoUser()
     {
-        $this->app['config']->set('cognito.use_sso', true);
+        $this->app['config']->set('cognito.sso', true);
         $cognitoUuid = Uuid::uuid4()->toString();
         $jwt = 'jwt';
         $attributes = collect([
@@ -81,6 +81,37 @@ class ProviderRepositoryTest extends TestCase
             'cognito_uuid' => $cognitoUuid,
             'email' => 'test@example.com',
             'name'  => 'Some Body'
+        ]);
+    }
+
+    /**
+     * @test
+     */
+    public function testCallSsoRepository()
+    {
+        $cognitoUuid = Uuid::uuid4()->toString();
+        $this->app['config']->set('cognito.sso', true);
+        $this->app['config']->set('cognito.sso_repository_class', 'BenBjurstrom\\CognitoGuard\\Tests\\Fixtures\\User');
+        $jwt = 'jwt';
+        $attributes = collect([
+            'email' => 'test@example.com',
+            'name'  => 'Some Body'
+        ]);
+
+        $uas = $this->mock(UserAttributeService::class);
+        $uas->shouldReceive('getUserAttributesFromToken')
+            ->with($jwt)
+            ->andReturn($attributes);
+
+        $result = $this->repository->createSsoUser($cognitoUuid, $jwt);
+
+        $this->assertInstanceOf(User::class, $result);
+        $this->assertEquals($cognitoUuid, $result->cognito_uuid);
+
+        $this->assertDatabaseHas('users', [
+            'cognito_uuid' => $cognitoUuid,
+            'email' => 'test@example.com',
+            'name'  => 'Another Body'
         ]);
     }
 
@@ -115,7 +146,6 @@ class ProviderRepositoryTest extends TestCase
         $required = collect(['email', 'name']);
 
         $this->repository->validateAttributes($available, $required);
-        $this->expectNotToPerformAssertions();
     }
 
     /**

@@ -7,9 +7,25 @@ use Firebase\JWT\ExpiredException;
 use Firebase\JWT\JWT;
 use Exception;
 use Firebase\JWT\SignatureInvalidException;
+use Illuminate\Http\Request;
 
 class TokenService
 {
+    public function getTokenFromRequest(Request $request): ?string
+    {
+        // from cookie
+        $prefix = 'CognitoIdentityServiceProvider_' . config('cognito.user_pool_client_id');
+        $sub = $request->cookie($prefix . '_LastAuthUser');
+        $jwt = $request->cookie($prefix . '_' . $sub . '_accessToken');
+
+        if($jwt){
+            return $jwt;
+        }
+
+        // from bearer token
+        return $request->bearerToken();
+    }
+
     /**
      * @param string $jwt
      * @return string

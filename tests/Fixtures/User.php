@@ -10,4 +10,13 @@ class User extends Authenticatable
     protected $casts = [
         'cognito_uuid' => 'string'
     ];
+
+    public function createCognitoUser(User $user): User
+    {
+        $user->name = 'Another Body';
+        $user->save();
+
+        return $user;
+    }
+
 }

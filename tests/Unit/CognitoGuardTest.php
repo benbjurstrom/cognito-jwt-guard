@@ -23,7 +23,11 @@ class CognitoGuardTest extends TestCase
         $request->shouldReceive('bearerToken')
             ->andReturn($jwt);
 
-        $this->mock(TokenService::class, function ($mock) use ($user, $jwt) {
+        $this->mock(TokenService::class, function ($mock) use ($user, $jwt, $request) {
+            $mock->shouldReceive('getTokenFromRequest')
+                ->with($request)
+                ->andReturn($jwt);
+
             $mock->shouldReceive('getCognitoUuidFromToken')
                 ->with($jwt)
                 ->andReturn($user->cognito_uuid);
@@ -83,7 +87,11 @@ class CognitoGuardTest extends TestCase
         $request->shouldReceive('bearerToken')
             ->andReturn($jwt);
 
-        $this->mock(TokenService::class, function ($mock) use ($user, $jwt) {
+        $this->mock(TokenService::class, function ($mock) use ($user, $jwt, $request) {
+            $mock->shouldReceive('getTokenFromRequest')
+                ->with($request)
+                ->andReturn($jwt);
+
             $mock->shouldReceive('getCognitoUuidFromToken')
                 ->with($jwt)
                 ->andReturn($user->cognito_uuid);

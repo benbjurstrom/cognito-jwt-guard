@@ -7,11 +7,13 @@ Laravel authorization guard for JSON Web Tokens issued by Amazon AWS Cognito
 [![License](https://poser.pugx.org/benbjurstrom/cognito-jwt-guard/license)](https://packagist.org/packages/benbjurstrom/cognito-jwt-guard)
 
 ## Overview
- This package provides a Laravel authentication guard to validate JSON Web Tokens (JWT) issued by the configured AWS Cognitio User Pool. Once the token has been validated against the pool’s public key the guard will look for a Laravel user with a cognito_uuid value equal to the username property contained in the token.  
+ This package provides a Laravel authentication guard to validate JSON Web Tokens (JWT) issued by the configured AWS Cognitio User Pool. The guard accepts tokens passed through the Authorization header or set as a CognitoIdentityServiceProvider cookie.
+ 
+ Once the token has been validated against the pool’s public key the guard will look for a Laravel user with a cognito_uuid value equal to the username property contained in the token.  
  
  If a local Laravel user is found the guard will authenticate them for the duration of the request. If one is not found and Single Sign-On is enabled this package will create a new Laravel user.
  
- Note that this package does not provide methods for exchanging a username and password for a token. As such it is intended to be used with Laravel API-driven applications where the client would either obtain the token directly from AWS Cognito or through a dedicated authentication application.
+ Note that this package does not provide methods for exchanging a username and password for a token. As such it is intended to be used with Laravel API-driven applications where the client would either obtain the token directly from Cognito or through a dedicated application responsible for authentication.
  
 ## Installation
 
@@ -60,7 +62,7 @@ Finally, depending on how you configured your Cognito User Pool's required attri
 |--------------------------------------------------------------------------
 | Single Sign-On Settings
 |--------------------------------------------------------------------------
-| If use_sso is true the cognito guard will automatically create a new user 
+| If sso is true the cognito guard will automatically create a new user 
 | record anytime the username attribute contained in a validated JWT 
 | does not already exist in the users table.
 |
@@ -69,13 +71,41 @@ Finally, depending on how you configured your Cognito User Pool's required attri
 | listed here must be set as a required attribute in your cognito user
 | pool.
 |
+| When sso_repository_class is set this package will pass a new instance
+| of the the auth provider's user model to the given class's
+| createCognitoUser method. The users model will be hydrated with the given
+| sso_user_attributes before it is passed.
 */
 
-'use_sso'               => env('USE_SSO', false),
+'sso'                   => env('SSO', false),
+'sso_repository_class'  => null,
 'sso_user_attributes'   => [
     'name',
     'email',
     ]
+```
+
+Configuring an sso_repository_class is optional but doing so allows you to 
+modify the new user record before it is saved or to dispatch events. An example 
+sso_repository_class might look like this:
+
+```php
+<?php
+namespace App\Repositories;
+
+use App\Models\User;
+use App\Events\UserWasRegistered;
+
+class UserRepository
+{
+    public function createCognitoUser(User $user): User
+    {
+        $user->save();
+        event(new UserWasRegistered($user));
+        
+        return $user;
+    }
+}
 ```
 
 ## Security
