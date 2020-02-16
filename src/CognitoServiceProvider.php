@@ -12,13 +12,15 @@ class CognitoServiceProvider extends ServiceProvider
 {
     public function boot(Filesystem $filesystem)
     {
-        $this->publishes([
-            __DIR__.'/../config/cognito.php' => config_path('cognito.php'),
-        ], 'config');
+        if ($this->app->runningInConsole()) {
+            $this->publishes([
+                __DIR__ . '/../config/cognito.php' => config_path('cognito.php'),
+            ], 'config');
 
-        $this->publishes([
-            __DIR__.'/../database/migrations/add_cognito_uuid_to_users_table.php.stub' => $this->getMigrationFileName($filesystem),
-        ], 'migrations');
+            $this->publishes([
+                __DIR__ . '/../database/migrations/add_cognito_uuid_to_users_table.php.stub' => $this->getMigrationFileName($filesystem),
+            ], 'migrations');
+        }
 
         $this->app->singleton(JwksService::class, function (Application $app) {
             return new JwksService( new Client);
@@ -43,7 +45,9 @@ class CognitoServiceProvider extends ServiceProvider
 
     public function register()
     {
-        $this->mergeConfigFrom(__DIR__.'/../config/cognito.php', 'cognito');
+        if (! $this->app->configurationIsCached()) {
+            $this->mergeConfigFrom(__DIR__.'/../config/cognito.php', 'cognito');
+        }
     }
 
     /**
