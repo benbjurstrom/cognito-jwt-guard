@@ -13,6 +13,8 @@ class CognitoGuard implements Guard
     use GuardHelpers;
 
     /**
+     * The request instance.
+     *
      * @var Request
      */
     protected $request;
@@ -28,10 +30,10 @@ class CognitoGuard implements Guard
      *
      * @return void
      */
-    public function __construct(Request $request, ProviderRepository $provider)
+    public function __construct(ProviderRepository $provider, Request $request)
     {
-        $this->request  = $request;
         $this->provider = $provider;
+        $this->request  = $request;
     }
 
     /**
@@ -41,19 +43,20 @@ class CognitoGuard implements Guard
      * @return Authenticatable|null
      */
     public function user(){
-        if ($this->user instanceof Authenticatable) {
+        if ($this->user  instanceof Authenticatable) {
             return $this->user;
         }
 
         $ts = app()->make(TokenService::class);
+        $jwt = $ts->getTokenFromRequest($this->request);
 
-        if(!$jwt = $ts->getTokenFromRequest($this->request)){
+        if(! $jwt){
             return null;
         }
 
         $cognitoUuid = $ts->getCognitoUuidFromToken($jwt);
 
-        return $this->user = $this->provider->getCognitoUser($cognitoUuid, $jwt);
+        return $this->user = $this->provider->getCognitoUser($cognitoUuid);
     }
 
     /**

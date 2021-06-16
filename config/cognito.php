@@ -20,27 +20,14 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Single Sign-On Settings
+    | User Provider
     |--------------------------------------------------------------------------
-    | If sso is true the cognito guard will automatically create a new user
-    | record anytime the username attribute contained in a validated JWT
-    | does not already exist in the users table.
+    | The cognito_uuid_key is the name of the column where the cognito users
+    | UUIDs are stored. Cognito guard will look in that column to match a given
+    | access token with an existing Laravel user.
     |
-    | The new user will be created with the user attributes listed here
-    | using the values stored in the given cognito user pool. Each attribute
-    | listed here must be set as a required attribute in your cognito user
-    | pool.
     |
-    | When sso_repository_class is set this package will pass a new instance
-    | of the the auth provider's user model to the given class's
-    | createCognitoUser method. The users model will be hydrated with the given
-    | sso_user_attributes before it is passed.
     */
 
-    'sso'                   => env('SSO', false),
-    'sso_repository_class'  => null,
-    'sso_user_attributes'   => [
-        'name',
-        'email',
-    ]
+    'cognito_uuid_key'  => 'cognito_uuid',
 ];

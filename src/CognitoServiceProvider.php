@@ -2,28 +2,21 @@
 
 namespace BenBjurstrom\CognitoGuard;
 
-use GuzzleHttp\Client;
-use Illuminate\Support\Collection;
-use Illuminate\Filesystem\Filesystem;
 use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider;
 
 class CognitoServiceProvider extends ServiceProvider
 {
-    public function boot(Filesystem $filesystem)
+    public function boot()
     {
         if ($this->app->runningInConsole()) {
             $this->publishes([
                 __DIR__ . '/../config/cognito.php' => config_path('cognito.php'),
             ], 'config');
-
-            $this->publishes([
-                __DIR__ . '/../database/migrations/add_cognito_uuid_to_users_table.php.stub' => $this->getMigrationFileName($filesystem),
-            ], 'migrations');
         }
 
         $this->app->singleton(JwksService::class, function (Application $app) {
-            return new JwksService( new Client);
+            return new JwksService();
         });
 
         $this->app->singleton(TokenService::class, function (Application $app) {
@@ -32,8 +25,8 @@ class CognitoServiceProvider extends ServiceProvider
 
         $this->app->singleton(CognitoGuard::class, function (Application $app) {
             return new CognitoGuard(
-                $app['request'],
-                new ProviderRepository($app['auth']->createUserProvider('users'))
+                new ProviderRepository($app['auth']->createUserProvider('users')),
+                $app['request']
             );
         });
 
@@ -48,22 +41,5 @@ class CognitoServiceProvider extends ServiceProvider
         if (! $this->app->configurationIsCached()) {
             $this->mergeConfigFrom(__DIR__.'/../config/cognito.php', 'cognito');
         }
-    }
-
-    /**
-     * Returns existing migration file if found, else uses the current timestamp.
-     *
-     * @param Filesystem $filesystem
-     * @return string
-     */
-    protected function getMigrationFileName(Filesystem $filesystem): string
-    {
-        $timestamp = date('Y_m_d_His');
-
-        return Collection::make($this->app->databasePath().DIRECTORY_SEPARATOR.'migrations'.DIRECTORY_SEPARATOR)
-            ->flatMap(function ($path) use ($filesystem) {
-                return $filesystem->glob($path.'*_add_cognito_uuid_to_users_table.php');
-            })->push($this->app->databasePath()."/migrations/{$timestamp}_add_cognito_uuid_to_users_table.php")
-            ->first();
     }
 }

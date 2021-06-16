@@ -7,7 +7,7 @@ use Illuminate\Foundation\Testing\DatabaseTransactions;
 use BenBjurstrom\CognitoGuard\Tests\Fixtures\User;
 use BenBjurstrom\CognitoGuard\CognitoServiceProvider;
 use Ramsey\Uuid\Uuid;
-use phpseclib\Crypt\RSA;
+use phpseclib3\Crypt\RSA;
 use Firebase\JWT\JWT;
 use Jose\Component\KeyManagement\JWKFactory;
 
@@ -21,8 +21,6 @@ abstract class TestCase extends Orchestra
 
         $this->loadMigrationsFrom(realpath(__DIR__.'/Fixtures'));
         $this->artisan('migrate');
-
-        $this->withFactories(realpath(__DIR__.'/Fixtures/factories'));
 
         \Route::get('user', function () {
             return auth()->user();
@@ -52,7 +50,7 @@ abstract class TestCase extends Orchestra
      * format, a jwt signed with the pem, and the kid of the jwt.
      *
      * @throws
-     * @return array
+     * @return object
      */
     protected function getJwtTestBundle()
     {
@@ -63,9 +61,9 @@ abstract class TestCase extends Orchestra
         $poolId     = config('cognito.user_pool_id');
         $issuer = sprintf('https://cognito-idp.%s.amazonaws.com/%s', $region, $poolId);
 
-        $payload = [
+        $payload = (object)[
             'sub' => $sub,
-            'device_key' => 'us-west-2_' .  Uuid::uuid4(),
+            'device_key' => 'us-west-2_' . Uuid::uuid4(),
             'event_id' => Uuid::uuid4(),
             'token_use' => 'access',
             'scope' => 'aws.cognito.signin.user.admin',
@@ -75,15 +73,14 @@ abstract class TestCase extends Orchestra
             'iat' => $now,
             'jti' => Uuid::uuid4()->toString(),
             'client_id' => bin2hex(random_bytes(13)),
-            'username' => $sub
+            'username' => $sub,
         ];
 
-        $rsa = new RSA();
-        $keypair = $rsa->createKey(512);
+        $keypair = RSA::createKey(512);
 
-        $kid = (base64_encode(hash ( 'sha256' , $keypair['publickey'], true)));
-        $jwt = JWT::encode($payload, $keypair['privatekey'], 'RS256', $kid);
-        $keyInfo = openssl_pkey_get_details(openssl_pkey_get_public($keypair['publickey']));
+        $kid = (base64_encode(hash ( 'sha256' , $keypair->getPublicKey(), true)));
+        $jwt = JWT::encode($payload, $keypair, 'RS256', $kid);
+        $keyInfo = openssl_pkey_get_details(openssl_pkey_get_public($keypair->getPublicKey()));
         $jwk = [
             'kty' => 'RSA',
             'kid' => $kid,
@@ -92,12 +89,12 @@ abstract class TestCase extends Orchestra
         ];
         $jwks =  [ 'keys' => [$jwk]];
 
-        return [
+        return (object)[
+            'payload' => $payload,
+            'keypair' => $keypair,
             'jwt'  => $jwt,
             'kid'  => $kid,
-            'jwk'  => $jwk,
             'jwks' => $jwks,
-            'pem'  => $keypair['publickey'],
             'sub'  => $sub,
         ];
     }

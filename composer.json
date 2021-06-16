@@ -29,20 +29,19 @@
         }
     ],
     "require": {
-        "php": ">=5.5.0",
+        "php": ">=8.0",
         "ext-json": "*",
-        "illuminate/auth": "^5.1|^6",
-        "illuminate/contracts": "^5.1|^6",
-        "illuminate/http": "^5.1|^6",
-        "illuminate/support": "^5.1|^6",
-        "firebase/php-jwt": "^5.0",
-        "guzzlehttp/guzzle": "^6.2.1",
-        "phpseclib/phpseclib": "^2.0"
+        "illuminate/auth": "^8",
+        "illuminate/contracts": "^8",
+        "illuminate/http": "^8.46",
+        "illuminate/support": "^8",
+        "firebase/php-jwt": "^5.3"
     },
     "require-dev": {
-        "phpunit/phpunit": "^8.0",
-        "orchestra/testbench": "^4.0",
-        "php-coveralls/php-coveralls": "^2.2"
+        "phpunit/phpunit": "^9.0",
+        "orchestra/testbench": "^6.0",
+        "php-coveralls/php-coveralls": "^2.4",
+        "phpseclib/phpseclib": "~3.0"
     },
     "autoload": {
         "psr-4": {

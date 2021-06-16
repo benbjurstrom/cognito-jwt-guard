@@ -1,90 +1,17 @@
 <?php
 namespace BenBjurstrom\CognitoGuard\Tests\Unit;
 
+use BenBjurstrom\CognitoGuard\Exceptions\InvalidTokenException;
 use BenBjurstrom\CognitoGuard\JwksService;
 use BenBjurstrom\CognitoGuard\Tests\TestCase;
+use BenBjurstrom\CognitoGuard\TokenService;
+use Firebase\JWT\JWK;
+use Illuminate\Http\Client\RequestException;
 use Illuminate\Support\Facades\Cache;
-
-use GuzzleHttp\Client;
-use GuzzleHttp\Psr7\Response;
-
+use Illuminate\Support\Facades\Http;
 
 class JwksServiceTest extends TestCase
 {
-
-    /**
-     * @test
-     */
-    public function testGetPemFromKid()
-    {
-        $jtb = $this->getJwtTestBundle();
-
-        // called in getJwks
-        Cache::shouldReceive('remember')
-            ->once()
-            ->with('cognito:jwks', 3600, \Mockery::on(function($value){
-                return is_callable($value);
-            }))
-            ->andReturn(json_encode($jtb['jwks']));
-
-        // called in updatePemCache
-        Cache::shouldReceive('remember')
-            ->once()
-            ->with('cognito:pem:' . $jtb['kid'], 3600, \Mockery::on(function($value){
-                return is_callable($value);
-            }))
-            ->andReturn(json_encode($jtb['pem']));
-
-        // called in getPemFromKid
-        Cache::shouldReceive('get')
-            ->once()
-            ->with('cognito:pem:' . $jtb['kid'], \Mockery::on(function($value){
-                return is_callable($value);
-            }))
-            ->andReturn($jtb['pem']);
-
-        $js = new JwksService();
-        $result = $js->getPemFromKid($jtb['kid']);
-
-        $this->assertEquals($result, $jtb['pem']);
-    }
-
-    /**
-     * @test
-     */
-    public function testUpdatePemCache()
-    {
-        $jtb    = $this->getJwtTestBundle();
-        $js     = new JwksService();
-
-        Cache::shouldReceive('remember')
-            ->once()
-            ->with('cognito:jwks', 3600, \Mockery::on(function($value){
-                return is_callable($value);
-            }))
-            ->andReturn(json_encode($jtb['jwks']));
-
-        Cache::shouldReceive('remember')
-            ->once()
-            ->with('cognito:pem:' . $jtb['kid'], 3600, \Mockery::on(function($value){
-                return is_callable($value);
-            }));
-
-        $js->updatePemCache($jtb['jwks']);
-    }
-
-    /**
-     * @test
-     */
-    public function testJwkToPem()
-    {
-        $jtb = $this->getJwtTestBundle();
-
-        $js = new JwksService();
-        $result = $js->jwkToPem(json_decode(json_encode($jtb['jwk'])));
-
-        $this->assertEquals($jtb['pem'], $result);
-    }
 
     /**
      * @test
@@ -94,15 +21,38 @@ class JwksServiceTest extends TestCase
         $jtb    = $this->getJwtTestBundle();
         $js     = new JwksService();
 
+        $region = 'SOME_REGION';
+        $poolId = 'SOME_POOL_ID';
+
         Cache::shouldReceive('remember')
             ->once()
-            ->with('cognito:jwks', 3600, \Mockery::on(function($value){
+            ->with('cognito:jwks-' . $poolId, 3600, \Mockery::on(function($value){
                 return is_callable($value);
             }))
-            ->andReturn(json_encode($jtb['jwks']));
+            ->andReturn(json_encode($jtb->jwks));
 
-        $result = $js->getJwks();
-        $this->assertEquals(json_decode(json_encode($jtb['jwks'])), $result);
+        $result = $js->getJwks($region, $poolId);
+        $this->assertEquals(JWK::parseKeySet($jtb->jwks), $result);
+    }
+
+    /**
+     * @test
+     */
+    public function testGetJwksCacheMiss()
+    {
+        $jtb    = $this->getJwtTestBundle();
+        $js     = new JwksService();
+
+        $region = 'some_region';
+        $poolId = 'some_pool_id';
+        $url    = sprintf('cognito-idp.%s.amazonaws.com/%s/.well-known/jwks.json', $region, $poolId);
+
+        Http::fake([
+            $url => Http::response($jtb->jwks, 200),
+        ]);
+
+        $result = $js->getJwks($region, $poolId);
+        $this->assertEquals(JWK::parseKeySet($jtb->jwks), $result);
     }
 
     /**
@@ -111,45 +61,37 @@ class JwksServiceTest extends TestCase
     public function testDownloadJwks()
     {
         $jtb    = $this->getJwtTestBundle();
-        $client = $this->getMockClient($jtb['jwks']);
-        $js = new JwksService($client);
-        $result = $js->downloadJwks();
 
-        $this->assertEquals(json_encode($jtb['jwks']), $result);
-    }
+        $region = 'some_region';
+        $poolId = 'some_pool_id';
+        $url    = sprintf('cognito-idp.%s.amazonaws.com/%s/.well-known/jwks.json', $region, $poolId);
 
-    /**
-     * @return string
-     */
-    protected function getJwksJson(){
-        return json_encode([
-            'UserAttributes' => [
-                [
-                    'Name' => 'name',
-                    'Value' => 'Some Name'
-                ],
-                [
-                    'Name' => 'email',
-                    'Value' => 'email@example.com'
-                ],
-            ]
+        Http::fake([
+            $url => Http::response($jtb->jwks, 200),
         ]);
+
+        $js = $this->app->make(JwksService::class);
+        $result = $js->downloadJwks($region, $poolId);
+
+        $this->assertEquals(json_encode($jtb->jwks), $result);
     }
 
     /**
-     * @param array $jwks
-     * @return \Mockery\MockInterface
+     * @test
      */
-    protected function getMockClient(array $jwks){
-        $region     = config('cognito.user_pool_region');
-        $poolId     = config('cognito.user_pool_id');
-        $url        = sprintf('https://cognito-idp.%s.amazonaws.com/%s/.well-known/jwks.json', $region, $poolId);
-        $client     = $this->mock(Client::class);
+    public function testDownloadJwksThrowsExceptionOn404()
+    {
+        $region = 'some_region';
+        $poolId = 'us-west-2_123';
+        $url    = sprintf('cognito-idp.%s.amazonaws.com/%s/.well-known/jwks.json', $region, $poolId);
 
-        $client->shouldReceive('get')
-            ->with($url)
-            ->andReturn(new Response(200, [], json_encode($jwks)));
+        Http::fake([
+            $url => Http::response(['message' => 'User pool us-west-2_123 does not exist.'], 404),
+        ]);
 
-        return $client;
+        $js = $this->app->make(JwksService::class);
+        $this->expectException(RequestException ::class);
+        $this->expectExceptionMessage('User pool us-west-2_123 does not exist.');
+        $result = $js->downloadJwks($region, $poolId);
     }
 }

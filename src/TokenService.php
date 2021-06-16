@@ -1,104 +1,152 @@
 <?php
 
 namespace BenBjurstrom\CognitoGuard;
+
 use BenBjurstrom\CognitoGuard\Exceptions\InvalidTokenException;
+use DomainException;
 use Firebase\JWT\BeforeValidException;
 use Firebase\JWT\ExpiredException;
 use Firebase\JWT\JWT;
-use Exception;
 use Firebase\JWT\SignatureInvalidException;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
+use InvalidArgumentException;
+use Ramsey\Uuid\Uuid;
+use Throwable;
+use UnexpectedValueException;
+
+use function count;
+use function explode;
 
 class TokenService
 {
     public function getTokenFromRequest(Request $request): ?string
     {
-        // from cookie
-        $prefix = 'CognitoIdentityServiceProvider_' . config('cognito.user_pool_client_id');
-        $sub = $request->cookie($prefix . '_LastAuthUser');
-        $jwt = $request->cookie($prefix . '_' . $sub . '_accessToken');
+        $jwt = $request->bearerToken();
 
-        if($jwt){
-            return $jwt;
+        if(! $jwt){
+            // from cookie
+            $prefix = 'CognitoIdentityServiceProvider_' . config('cognito.user_pool_client_id');
+            $sub = $request->cookie($prefix . '_LastAuthUser');
+            $jwt = $request->cookie($prefix . '_' . $sub . '_accessToken');
         }
 
-        // from bearer token
-        return $request->bearerToken();
+        return $jwt;
     }
 
     /**
      * @param string $jwt
      * @return string
-     * @throws \Throwable
+     * @throws InvalidTokenException|Throwable
      */
-    public function getCognitoUuidFromToken(string $jwt){
+    public function getCognitoUuidFromToken(string $jwt): string
+    {
         $payload = $this->decode($jwt);
-        $this->validatePayload($payload);
 
         $cognitoUuid = $payload->username ?? $payload->{'cognito:username'};
-        throw_unless($cognitoUuid, new Exception ('CognitoUuid not found'));
+        throw_unless($cognitoUuid, new InvalidTokenException('CognitoUuid not found'));
 
         return $cognitoUuid;
     }
 
     /**
-     * JWT::decode will throw an exception if the token is expired or
-     * otherwise invalid
-     *
      * @param string $jwt
-     * @return mixed
-     * @throws \Throwable
+     * @return object
+     * @throws InvalidTokenException
      */
-    public function decode(string $jwt){
-        $kid = $this->getKid($jwt);
-        $jwksService = app()->make(JwksService::class);
-        $pem = $jwksService->getPemFromKid($kid);
+    public function decode(string $jwt): object
+    {
+        $this->validateHeader($jwt);
+
+        $region     = config('cognito.user_pool_region');
+        $poolId     = config('cognito.user_pool_id');
+        $js         = app()->make(JwksService::class);
+        $keys       = $js->getJwks($region, $poolId);
 
         try{
-            $payload = JWT::decode($jwt, $pem, array('RS256'));
-        }catch(ExpiredException $e){
+            // JWT::decode will throw an exception if the token is expired or otherwise invalid
+            $payload = JWT::decode($jwt, $keys, ['RS256']);
+        }catch(
+            InvalidArgumentException
+            | UnexpectedValueException
+            | SignatureInvalidException
+            | BeforeValidException
+            | ExpiredException
+            | DomainException
+            $e
+        ){
             throw new InvalidTokenException($e->getMessage());
         }
-        catch(SignatureInvalidException $e){
-            throw new InvalidTokenException($e->getMessage());
-        }
-        catch(BeforeValidException $e){
-            throw new InvalidTokenException($e->getMessage());
-        }
+
+        $this->validatePayload($payload, $region, $poolId);
 
         return $payload;
     }
 
     /**
-     * Although we already know the token has a valid signature and is
-     * unexpired, this method is used to validate the payload parameters.
+     * Validates the header exists, can be base64 decoded, has a kid,
+     * and has RS256 as alg
      *
-     * @param object $payload
-     * @return mixed
-     * @throws \Throwable
+     * @param string $jwt
+     * @throws InvalidTokenException
      */
-    public function validatePayload(object $payload){
-        $region     = config('cognito.user_pool_region');
-        $poolId     = config('cognito.user_pool_id');
-        $issuer = sprintf('https://cognito-idp.%s.amazonaws.com/%s', $region, $poolId);
+    public function validateHeader(string $jwt): void
+    {
+        $tks = explode('.', $jwt);
+        if (count($tks) != 3) {
+            throw new InvalidTokenException('Wrong number of segments');
+        }
 
-        throw_unless($payload->iss === $issuer, new InvalidTokenException ('Invalid issuer. Expected:'. $issuer));
-        throw_unless(in_array($payload->token_use, ['id','access']), new InvalidTokenException ('Invalid token use'));
+        try{
+            $header = JWT::jsonDecode(JWT::urlsafeB64Decode($tks[0]));
+        }catch(DomainException $e
+        ){
+            throw new InvalidTokenException($e->getMessage());
+        }
+
+        if(empty($header->kid)){
+            throw new InvalidTokenException('No kid present in token header');
+        }
+
+        if(empty($header->alg)){
+            throw new InvalidTokenException('No alg present in token header');
+        }
+
+        if($header->alg !== 'RS256'){
+            throw new InvalidTokenException('The token alg is not RS256');
+        }
     }
 
     /**
-     * @param string $jwt
-     * @return string|null
-     * @throws \Throwable
+     * Although we already know the token has a valid signature and is
+     * unexpired, this method is used to validate the payload.
+     *
+     * @param object $payload
+     * @param $region
+     * @param $poolId
+     * @return void
+     * @throws InvalidTokenException | Throwable
      */
-    public function getKid(string $jwt): ?string
+    public function validatePayload(object $payload, $region, $poolId): void
     {
-        $header = JWT::jsonDecode(JWT::urlsafeB64Decode(strtok($jwt, '.')));
+        $issuer = sprintf('https://cognito-idp.%s.amazonaws.com/%s', $region, $poolId);
 
-        throw_unless(isset($header->kid), new InvalidTokenException('No kid present in token header'));
-        throw_unless(isset($header->alg), new InvalidTokenException ('No alg present in token header'));
-        throw_unless($header->alg === 'RS256', new InvalidTokenException ('The token alg  is not RS256'));
+        if($payload->iss !== $issuer){
+            throw new InvalidTokenException ('Invalid issuer. Expected:' . $issuer);
+        }
 
-        return $header->kid;
+        if(! in_array($payload->token_use, ['id','access'])){
+            throw new InvalidTokenException ('Invalid token_use. Must be one of ["id","access"].');
+        }
+
+        if(! isset($payload->username) && !isset($payload->{'cognito:username'})){
+            throw new InvalidTokenException  ('Invalid token attributes. Token must include one of "username","cognito:username".');
+        }
+
+        $uuid = $payload->username ?? $payload->{'cognito:username'};
+
+        if(! Uuid::isValid($uuid) && !isset($payload->{'cognito:username'})){
+            throw new InvalidTokenException  ('Invalid token attributes. Parameters "username" and "cognito:username" must be a UUID.');
+        }
     }
 }
