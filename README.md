@@ -107,7 +107,7 @@ class UserRepository
 
 ## Security
 
-If you discover any security-related issues, please email [ben@jelled.com](mailto:ben@jelled.com) instead of using the issue tracker.
+If you discover any security-related issues, please email [david@alsbury.com](mailto:david@alsbury.com) instead of using the issue tracker.
 
 ## License
 
