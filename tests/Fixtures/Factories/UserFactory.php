@@ -1,8 +1,8 @@
 <?php
 
-namespace BenBjurstrom\CognitoGuard\Tests\Fixtures\Factories;
+namespace Alsbury\CognitoGuard\Tests\Fixtures\Factories;
 
-use BenBjurstrom\CognitoGuard\Tests\Fixtures\User;
+use Alsbury\CognitoGuard\Tests\Fixtures\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Ramsey\Uuid\Uuid;
 

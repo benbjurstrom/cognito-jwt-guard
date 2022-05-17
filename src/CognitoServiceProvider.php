@@ -1,6 +1,6 @@
 <?php
 
-namespace BenBjurstrom\CognitoGuard;
+namespace Alsbury\CognitoGuard;
 
 use Illuminate\Foundation\Application;
 use Illuminate\Support\ServiceProvider;

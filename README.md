@@ -1,10 +1,7 @@
 # Cognito JWT Guard
 Laravel authorization guard for JSON Web Tokens issued by Amazon AWS Cognito
 
-[![Build Status](https://github.com/benbjurstrom/cognito-jwt-guard/workflows/build/badge.svg?branch=master)](https://packagist.org/packages/benbjurstrom/cognito-jwt-guard?branch=master)
-[![Latest Stable Version](https://poser.pugx.org/benbjurstrom/cognito-jwt-guard/v/stable)](https://packagist.org/packages/benbjurstrom/cognito-jwt-guard)
-[![Coverage Status](https://coveralls.io/repos/github/benbjurstrom/cognito-jwt-guard/badge.svg?branch=master)](https://coveralls.io/github/benbjurstrom/cognito-jwt-guard?branch=master)
-[![License](https://poser.pugx.org/benbjurstrom/cognito-jwt-guard/license)](https://packagist.org/packages/benbjurstrom/cognito-jwt-guard)
+This project is fork of [benbjurstrom/cognito-jwt-guard](https://github.com/benbjurstrom/cognito-jwt-guard) which appears to be abandoned.
 
 ## Overview
  This package provides a Laravel authentication guard to validate JSON Web Tokens (JWT) issued by the configured AWS Cognitio User Pool. The guard accepts tokens passed through the Authorization header or set as a CognitoIdentityServiceProvider cookie.
@@ -20,13 +17,13 @@ Laravel authorization guard for JSON Web Tokens issued by Amazon AWS Cognito
 You can install the package using composer
 
 ```shell script
-composer require benbjurstrom/cognito-jwt-guard
+composer require alsbury/cognito-jwt-guard
 ```
 
-Next publish the [migration](https://github.com/benbjurstrom/cognito-jwt-guard/blob/master/database/migrations/add_cognito_uuid_to_users_table.php.stub) and the [config/cognito.php](https://github.com/benbjurstrom/cognito-jwt-guard/blob/master/config/cognito.php) config file with:
+Next publish the [migration](https://github.com/alsbury/cognito-jwt-guard/blob/master/database/migrations/add_cognito_uuid_to_users_table.php.stub) and the [config/cognito.php](https://github.com/alsbury/cognito-jwt-guard/blob/master/config/cognito.php) config file with:
 
 ```shell script
- php artisan vendor:publish --provider="BenBjurstrom\CognitoGuard\CognitoServiceProvider"
+ php artisan vendor:publish --provider="Alsbury\CognitoGuard\CognitoServiceProvider"
 ```
 
 Next go ahead and run your migrations. This will add the required cognito_uuid property to your users table

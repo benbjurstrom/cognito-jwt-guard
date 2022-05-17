@@ -1,11 +1,11 @@
 <?php
-namespace BenBjurstrom\CognitoGuard\Tests\Feature;
+namespace Alsbury\CognitoGuard\Tests\Feature;
 
-use BenBjurstrom\CognitoGuard\Exceptions\InvalidTokenException;
-use BenBjurstrom\CognitoGuard\Tests\TestCase;
-use BenBjurstrom\CognitoGuard\Tests\Fixtures\User;
-use BenBjurstrom\CognitoGuard\CognitoClient;
-use BenBjurstrom\CognitoGuard\TokenService;
+use Alsbury\CognitoGuard\Exceptions\InvalidTokenException;
+use Alsbury\CognitoGuard\Tests\TestCase;
+use Alsbury\CognitoGuard\Tests\Fixtures\User;
+use Alsbury\CognitoGuard\CognitoClient;
+use Alsbury\CognitoGuard\TokenService;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;

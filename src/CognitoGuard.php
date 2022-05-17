@@ -1,8 +1,8 @@
 <?php
 
-namespace BenBjurstrom\CognitoGuard;
+namespace Alsbury\CognitoGuard;
 
-use BenBjurstrom\CognitoGuard\Exceptions\MethodNotSupportedException;
+use Alsbury\CognitoGuard\Exceptions\MethodNotSupportedException;
 use Illuminate\Auth\GuardHelpers;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Guard;
