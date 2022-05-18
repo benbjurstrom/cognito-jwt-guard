@@ -1,6 +1,6 @@
 {
-    "name": "benbjurstrom/cognito-jwt-guard",
-    "description": "A laravel auth guard for JSON Web Tokens issued by Amazon AWS Cognito",
+    "name": "alsbury/cognito-jwt-guard",
+    "description": "A laravel auth guard for JSON Web Tokens issued by Amazon AWS Cognito forked from benbjurstrom/cognito-jwt-guard",
     "type": "laravel",
     "keywords": [
         "cognito",
@@ -14,27 +14,33 @@
         "json web token",
         "jwks"
     ],
-    "homepage": "https://github.com/benbjurstrom/cognito-jwt-guard",
+    "homepage": "https://github.com/alsbury/cognito-jwt-guard",
     "support": {
-        "issues": "https://github.com/benbjurstrom/cognito-jwt-guard/issues",
-        "source": "https://github.com/benbjurstrom/cognito-jwt-guard"
+        "issues": "https://github.com/alsbury/cognito-jwt-guard/issues",
+        "source": "https://github.com/alsbury/cognito-jwt-guard"
     },
     "license": "MIT",
     "authors": [
-        {
-            "name": "Ben Bjurstrom",
-            "email": "ben@jelled.com",
-            "homepage": "https://benbjurstrom.com",
-            "role": "Developer"
-        }
+      {
+        "name": "David Alsbury",
+        "email": "david@alsbury.com",
+        "homepage": "https://alsbury.com",
+        "role": "Developer"
+      },
+      {
+        "name": "Ben Bjurstrom",
+        "email": "ben@jelled.com",
+        "homepage": "https://benbjurstrom.com",
+        "role": "Original Developer"
+      }
     ],
     "require": {
         "php": ">=8.0",
         "ext-json": "*",
-        "illuminate/auth": "^8",
-        "illuminate/contracts": "^8",
-        "illuminate/http": "^8.46",
-        "illuminate/support": "^8",
+        "illuminate/auth": "^8|^9",
+        "illuminate/contracts": "^8|^9",
+        "illuminate/http": "^8.46|^9",
+        "illuminate/support": "^8|^9",
         "firebase/php-jwt": "^5.3"
     },
     "require-dev": {
@@ -45,18 +51,18 @@
     },
     "autoload": {
         "psr-4": {
-            "BenBjurstrom\\CognitoGuard\\": "src/"
+            "Alsbury\\CognitoGuard\\": "src/"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "BenBjurstrom\\CognitoGuard\\Tests\\": "tests"
+            "Alsbury\\CognitoGuard\\Tests\\": "tests"
         }
     },
     "extra": {
         "laravel": {
             "providers": [
-                "BenBjurstrom\\CognitoGuard\\CognitoServiceProvider"
+                "Alsbury\\CognitoGuard\\CognitoServiceProvider"
             ]
         }
     },

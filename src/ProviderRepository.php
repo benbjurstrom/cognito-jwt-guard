@@ -1,6 +1,6 @@
 <?php
 
-namespace BenBjurstrom\CognitoGuard;
+namespace Alsbury\CognitoGuard;
 
 use Illuminate\Auth\EloquentUserProvider;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -8,7 +8,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 
 /**
  * Class ProviderRepository
- * @package BenBjurstrom\CognitoGuard
+ * @package Alsbury\CognitoGuard
  */
 class ProviderRepository
 {

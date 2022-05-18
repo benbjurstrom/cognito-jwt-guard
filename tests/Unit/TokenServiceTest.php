@@ -1,10 +1,10 @@
 <?php
-namespace BenBjurstrom\CognitoGuard\Tests\Unit;
+namespace Alsbury\CognitoGuard\Tests\Unit;
 
-use BenBjurstrom\CognitoGuard\Exceptions\InvalidTokenException;
-use BenBjurstrom\CognitoGuard\JwksService;
-use BenBjurstrom\CognitoGuard\Tests\TestCase;
-use BenBjurstrom\CognitoGuard\TokenService;
+use Alsbury\CognitoGuard\Exceptions\InvalidTokenException;
+use Alsbury\CognitoGuard\JwksService;
+use Alsbury\CognitoGuard\Tests\TestCase;
+use Alsbury\CognitoGuard\TokenService;
 use DateTime;
 use Firebase\JWT\JWK;
 use Firebase\JWT\JWT;
