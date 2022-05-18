@@ -3,7 +3,6 @@ namespace Alsbury\CognitoGuard\Tests\Feature;
 
 use Alsbury\CognitoGuard\JwksService;
 use Alsbury\CognitoGuard\Tests\TestCase;
-use Alsbury\CognitoGuard\UserAttributeService;
 use Firebase\JWT\JWK;
 use Firebase\JWT\JWT;
 

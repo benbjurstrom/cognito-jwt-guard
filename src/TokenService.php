@@ -20,6 +20,14 @@ use function explode;
 
 class TokenService
 {
+    protected String $uuidColumn;
+
+    public function __construct()
+    {
+        $this->uuidColumn = config('cognito.uuid_column', 'sub');
+    }
+
+
     public function getTokenFromRequest(Request $request): ?string
     {
         $jwt = $request->bearerToken();
@@ -43,7 +51,7 @@ class TokenService
     {
         $payload = $this->decode($jwt);
 
-        $cognitoUuid = $payload->username ?? $payload->{'cognito:username'};
+        $cognitoUuid = $payload->{$this->uuidColumn};
         throw_unless($cognitoUuid, new InvalidTokenException('CognitoUuid not found'));
 
         return $cognitoUuid;
@@ -139,13 +147,13 @@ class TokenService
             throw new InvalidTokenException ('Invalid token_use. Must be one of ["id","access"].');
         }
 
-        if(! isset($payload->username) && !isset($payload->{'cognito:username'})){
-            throw new InvalidTokenException  ('Invalid token attributes. Token must include one of "username","cognito:username".');
+        if(! isset($payload->username) && !isset($payload->{$this->uuidColumn})){
+            throw new InvalidTokenException  ('Invalid token attributes. Token must include a column which contains the UUID.');
         }
 
-        $uuid = $payload->username ?? $payload->{'cognito:username'};
+        $uuid = $payload->{$this->uuidColumn};
 
-        if(! Uuid::isValid($uuid) && !isset($payload->{'cognito:username'})){
+        if(! Uuid::isValid($uuid) && !isset($payload->{$this->uuidColumn})){
             throw new InvalidTokenException  ('Invalid token attributes. Parameters "username" and "cognito:username" must be a UUID.');
         }
     }

@@ -1,15 +1,9 @@
 <?php
 namespace Alsbury\CognitoGuard\Tests\Feature;
 
-use Alsbury\CognitoGuard\Exceptions\InvalidTokenException;
 use Alsbury\CognitoGuard\Tests\TestCase;
 use Alsbury\CognitoGuard\Tests\Fixtures\User;
-use Alsbury\CognitoGuard\CognitoClient;
-use Alsbury\CognitoGuard\TokenService;
-use Illuminate\Auth\AuthenticationException;
-use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
-use Illuminate\Validation\ValidationException;
 
 class CognitoGuardTest extends TestCase
 {
