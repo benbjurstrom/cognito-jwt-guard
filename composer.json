@@ -35,10 +35,10 @@
         "illuminate/contracts": "^8",
         "illuminate/http": "^8.46",
         "illuminate/support": "^8",
-        "firebase/php-jwt": "^5.3"
+        "firebase/php-jwt": "^6.4"
     },
     "require-dev": {
-        "phpunit/phpunit": "^9.0",
+        "phpunit/phpunit": "^9.5",
         "orchestra/testbench": "^6.0",
         "php-coveralls/php-coveralls": "^2.4",
         "phpseclib/phpseclib": "~3.0"
